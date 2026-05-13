@@ -1,0 +1,8 @@
+{
+  "kendall_tau_mean": 0.5537777777777777,
+  "kendall_tau_std": 0.14386825248842797,
+  "spearman_mean": 0.6836363636363635,
+  "spearman_std": 0.147764486377287,
+  "exact_match": 0.0,
+  "n_samples": 50
+}

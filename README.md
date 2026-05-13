@@ -1,12 +1,15 @@
 # PoliticHeadlinES @ IberLEF 2026
 
-Source code, predictions and reproduction recipe for our submission to the
-[PoliticHeadlinES 2026](https://www.codabench.org/competitions/13546/) shared task at IberLEF 2026.
+Source code, predictions and the reproduction recipe for the
+**OpenCódice** submission to the
+[PoliticHeadlinES 2026](https://www.codabench.org/competitions/13546/)
+shared task at IberLEF 2026.
 
-The task asks systems to rank ten Spanish-language candidate headlines for a
-given political news article (body + image). Exactly one candidate is the
-original published headline; the other nine are paraphrase or off-topic
-distractors.
+The task asks systems to rank ten Spanish-language candidate headlines for
+a given political news article (body + image). Exactly one candidate is
+the original published headline; the other nine are paraphrase or
+off-topic distractors. The official metric is a position-aware variant of
+nDCG@10.
 
 ## Submitted system
 
@@ -16,39 +19,43 @@ A score-level fusion of three independent rankers:
    training set with MSE loss against the gold rank position
    (`src/train_ranker.py`).
 2. **LightGBM ranker** on hand-crafted features that combine token-overlap
-   statistics, proper-noun overlap, the XLM-R score, and positional priors
-   (`src/train_gbm.py`, `src/feature_analysis.py`).
+   statistics, proper-noun overlap, the XLM-R score, and positional
+   priors (`src/train_gbm.py`, `src/feature_analysis.py`).
 3. **GPT-5.4 listwise prompt** that returns a full permutation of the ten
    candidates (`src/gpt_ranker.py`).
 
 The three score vectors are normalised per article and combined linearly
 with mixing weight α = 0.3 in front of the GPT score.
 
-The final submission scored **0.8841** on the official PA-nDCG@K metric and
-ranked **6th of 19** on the public test leaderboard.
+The final submission scored **0.8841** nDCG@10 on both subtasks (text-only
+and multimodal) and ranked **7th of 19 participating teams** (plus the
+official baseline) on the public test leaderboard.
 
 ## Repository layout
 
 ```
-src/                    Training and inference scripts
+src/                          Training, inference and analysis scripts
 release/
-  predictions.csv       Test predictions of the submitted system
-  submission.zip        Submission archive uploaded to CodaBench
-README.md               This file
-requirements.txt        Python dependencies
-LICENSE                 MIT
+  submission_v9_final.zip     Submission archive uploaded to CodaBench
+  submission_v6_borda.zip     Earlier Borda-count fusion variant
+  submission_v7_post_hoc.zip  Post-hoc Top-1 picker variant
+  submission_v8_post_hoc.zip  Post-hoc Top-1 picker variant
+  test_predictions.csv        Final test predictions (Task 1 + Task 2)
+results/
+  predictions_*.csv           Per-strategy dev/test predictions
+  metrics_*.json              Per-strategy evaluation metrics
+  descriptions_*.json         Image captions used in multimodal variants
+  error_analysis_*.json       Top-1 agreement and paraphrase-density stats
+RECIPE.md                     Step-by-step reproduction recipe
+requirements.txt              Python dependencies
+LICENSE                       MIT
 ```
 
-## Reproducing the submission
-
-The training set, development set and test set are not included in this
-repository (they belong to the task organisers). Place the official files at
-`data/test_public/train_public.csv`, `data/dev_public.csv`,
-`data/test_public/test_public.csv`, and the test images under
-`data/test_public/images/`.
+## Quick reproduction
 
 ```bash
 pip install -r requirements.txt
+export OPENAI_API_KEY=...   # required only for GPT-based steps
 
 # 1. Train the XLM-R-large pointwise ranker (single GPU, ~3 epochs)
 python src/train_ranker.py
@@ -56,16 +63,28 @@ python src/train_ranker.py
 # 2. Train the LightGBM ranker on hand-crafted features
 python src/train_gbm.py
 
-# 3. Generate listwise rankings with GPT-5.4 (requires OPENAI_API_KEY)
+# 3. Generate listwise rankings with GPT-5.4
 python src/gpt_ranker.py --split test
 
 # 4. Fuse the three score vectors and produce the submission file
-python src/gbm_inference.py --alpha 0.3 --out release/predictions.csv
+python src/gbm_inference.py --alpha 0.3 --out release/test_predictions.csv
 ```
 
-## Citation
+See [`RECIPE.md`](RECIPE.md) for the complete cookbook including data
+preparation, environment variables, GPU notes and expected wall-clock
+times.
 
-If you use this code, please cite the system description paper.
+The training set, development set and test set are not included in this
+repository (they belong to the task organisers). Place the official files
+at `data/train_public.csv`, `data/dev_public.csv`,
+`data/test_public/test_public.csv`, and the test images under
+`data/test_public/images/`.
+
+## System description paper
+
+The methodology and full set of strategies explored during the campaign
+are documented in the system description paper, available at the
+IberLEF 2026 working notes on CEUR-WS.
 
 ```bibtex
 @inproceedings{rodrigogines2026politicheadlines,

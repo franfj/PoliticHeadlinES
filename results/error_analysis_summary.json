@@ -1,0 +1,15 @@
+{
+  "n_test_articles": 4912,
+  "top1_is_most_specific_among_all_10": {
+    "count": 623,
+    "fraction": 0.12683224755700326
+  },
+  "paraphrase_density_per_article": {
+    "1": 2498,
+    "0": 2395,
+    "2": 18,
+    "3": 1
+  },
+  "paraphrase_density_mean": 0.5164902280130294,
+  "suspicious_case_count_emitted": 200
+}
